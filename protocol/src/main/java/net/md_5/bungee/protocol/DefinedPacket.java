@@ -35,13 +35,21 @@ public abstract class DefinedPacket
 
     public static void writeArray(byte[] b, ByteBuf buf)
     {
+        Preconditions.checkArgument( b.length <= Short.MAX_VALUE, "Cannot send byte array longer than Short.MAX_VALUE (got %s bytes)", b.length );
         writeVarInt( b.length, buf );
         buf.writeBytes( b );
     }
 
     public static byte[] readArray(ByteBuf buf)
     {
-        byte[] ret = new byte[ readVarInt( buf ) ];
+        return readArray( buf, buf.readableBytes() );
+    }
+
+    public static byte[] readArray(ByteBuf buf, int limit)
+    {
+        int len = readVarInt( buf );
+        Preconditions.checkArgument( len <= limit, "Cannot receive byte array longer than %s (got %s bytes)", limit, len );
+        byte[] ret = new byte[ len ];
         buf.readBytes( ret );
         return ret;
     }
